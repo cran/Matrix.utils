@@ -2,7 +2,7 @@
 % Please edit documentation in R/Matrix.utils.R
 \name{aggregate.Matrix}
 \alias{aggregate.Matrix}
-\title{Compute summary statistics of a Matrix.}
+\title{Compute summary statistics of a Matrix}
 \usage{
 \method{aggregate}{Matrix}(x, groupings = NULL, form = NULL, fun = "sum",
   ...)

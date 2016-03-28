@@ -5,14 +5,12 @@
 \alias{merge.Matrix}
 \title{Merges two Matrices or matrix-like objects}
 \usage{
-\method{merge}{Matrix}(x, y, by.x = rownames(x), by.y = rownames(y),
-  type = "left", ...)
+\method{merge}{Matrix}(x, y, by.x, by.y, all.x = TRUE, all.y = TRUE, ...)
 
-join.Matrix(x, y, by.x = rownames(x), by.y = rownames(y), type = "left",
-  ...)
+join.Matrix(x, y, by.x, by.y, all.x = TRUE, all.y = TRUE, ...)
 }
 \arguments{
-\item{x}{\code{\link{Matrix}} or matrix-like object}
+\item{x}{\code{Matrix} or matrix-like object}
 
 \item{y}{\code{Matrix} or matrix-like object}
 
@@ -20,41 +18,81 @@ join.Matrix(x, y, by.x = rownames(x), by.y = rownames(y), type = "left",
 
 \item{by.y}{vector indicating the names to match from \code{Matrix} y}
 
-\item{type}{type of join: currently on left and inner are supported}
+\item{all.x}{logical; if \code{TRUE}, then each value in \code{x} will be 
+included even if it has no matching values in \code{y}}
+
+\item{all.y}{logical; if \code{TRUE}, then each value in \code{y} will be 
+included even if it has no matching values in \code{x}}
 
 \item{...}{arguments to be passed to or from methods.  Currently ignored}
 }
 \description{
-Similar to \code{\link{merge}} or \code{\link[plyr]{join}}. Currently can only do left and 
-inner joins that only find the first matching row; equivalent to 
-plyr::join(match='first').  This is sufficient for N to 1 joins, such as joining a list of
-addresses to a zip code lookup table.
+Implementation of \code{\link{merge}} for \code{\link{Matrix}}.  By explicitly
+calling \code{merge.Matrix} it will also work for \code{matrix}, for 
+\code{data.frame}, and \code{vector} objects as a much faster alternative to 
+the built-in \code{merge}.
+}
+\details{
+#' \code{all.x/all.y} correspond to the four types of database joins in the 
+following way:
 
-Synonym for merge.Matrix.
+\describe{ \item{left}{\code{all.x=TRUE}, \code{all.y=FALSE}} 
+\item{right}{\code{all.x=FALSE}, \code{all.y=TRUE}} 
+\item{inner}{\code{all.x=FALSE}, \code{all.y=FALSE}} 
+\item{full}{\code{all.x=TRUE}, \code{all.y=TRUE}} }
+
+Note that \code{NA} values will match other \code{NA} values.
 }
 \examples{
-orders<-Matrix(as.matrix(data.frame(orderNum=1:1000,
-   customer=sample(100,1000,TRUE))),sparse=TRUE)
-cancelledOrders<-Matrix(as.matrix(data.frame(orderNum=sample(1000,100),
-   cancelled=1)),sparse=TRUE)
-skus<-Matrix(as.matrix(data.frame(orderNum=sample(1000,10000,TRUE),
-   sku=sample(1000,10000,TRUE),
-   amount=runif(10000))),sparse=TRUE)
-a<-merge.Matrix(orders,cancelledOrders,orders[,'orderNum'],cancelledOrders[,'orderNum'])
-b<-merge.Matrix(orders,cancelledOrders,orders[,'orderNum'],cancelledOrders[,'orderNum'],
-   type='inner')
-c<-merge.Matrix(orders,skus,orders[,'orderNum'],skus[,'orderNum'])
 
-\dontrun{
-## Not run:
-orders<-data.frame(orderNum=sample(1e6, 1e7, TRUE),
-   sku=sample(1e3, 1e7, TRUE),
-   customer=sample(1e4,1e7,TRUE))
-cancelledOrders<-data.frame(data.frame(orderNum=sample(1e6,1e5),cancelled=1))
-system.time(b<-merge.Matrix(orders,cancelledOrders,orders[,'orderNum'],
-   cancelledOrders[,'orderNum'],type='inner'))
-#The following is the equivalent call in plyr, but returns an error due to a bug in plyr
-system.time(c<-plyr::join(orders,cancelledOrders,type='inner',match='first')) 
+orders<-Matrix(as.matrix(data.frame(orderNum=1:1000, 
+customer=sample(100,1000,TRUE)))) 
+cancelledOrders<-Matrix(as.matrix(data.frame(orderNum=sample(1000,100), 
+cancelled=1))) 
+skus<-Matrix(as.matrix(data.frame(orderNum=sample(1000,10000,TRUE), 
+sku=sample(1000,10000,TRUE), amount=runif(10000)))) 
+a<-merge(orders,cancelledOrders,orders[,'orderNum'],cancelledOrders[,'orderNum'])
+b<-merge(orders,cancelledOrders,orders[,'orderNum'],cancelledOrders[,'orderNum'],all.x=FALSE)
+c<-merge(orders,skus,orders[,'orderNum'],skus[,'orderNum'])
+
+#The above Matrices could be converted to matrices or data.frames and handled in other methods.  
+#However, this is not possible in the sparse case, which can be handled by this function:
+sm<-cbind2(1:200000,rsparsematrix(200000,10000,density=.0001))
+sm2<-cbind2(sample(1:200000,50000,TRUE),rsparsematrix(200000,10,density=.01))
+sm3<-merge.Matrix(sm,sm2,by.x=sm[,1],by.y=sm2[,1])
+
+ \dontrun{
+#merge.Matrix can also handle many other data types, such as data frames, and is generally fast.
+orders<-data.frame(orderNum=as.character(sample(1e5, 1e6, TRUE)),
+   sku=sample(1e3, 1e6, TRUE),
+   customer=sample(1e4,1e6,TRUE),stringsAsFactors=FALSE)
+cancelledOrders<-data.frame(orderNum=as.character(sample(1e5,1e4)),
+   cancelled=1,stringsAsFactors=FALSE)
+system.time(a<-merge.Matrix(orders,cancelledOrders,orders[,'orderNum'],
+   cancelledOrders[,'orderNum']))
+system.time(b<-merge.data.frame(orders,cancelledOrders,all.x = TRUE,all.y=TRUE))
+system.time(c<-dplyr::full_join(orders,cancelledOrders))
+system.time({require(data.table);
+d<-merge(data.table(orders),data.table(cancelledOrders),
+   by='orderNum',all=TRUE,allow.cartesian=TRUE)})
+
+orders<-data.frame(orderNum=sample(1e5, 1e6, TRUE), sku=sample(1e3, 1e6,
+TRUE), customer=sample(1e4,1e6,TRUE),stringsAsFactors=FALSE) 
+cancelledOrders<-data.frame(orderNum=sample(1e5,1e4),cancelled=1,stringsAsFactors=FALSE)
+system.time(b<-merge.Matrix(orders,cancelledOrders,orders[,'orderNum'], 
+cancelledOrders[,'orderNum'])) 
+system.time(e<-dplyr::full_join(orders,cancelledOrders)) 
+system.time({require(data.table);
+ d<-merge(data.table(orders),data.table(cancelledOrders),
+ by='orderNum',all=TRUE,allow.cartesian=TRUE)})
+
+#In certain cases, merge.Matrix can be much faster than alternatives. 
+one<-as.character(1:1000000) two<-as.character(sample(1:1000000,1e5,TRUE)) 
+system.time(b<-merge.Matrix(one,two,one,two)) 
+system.time(c<-dplyr::full_join(data.frame(key=one),data.frame(key=two))) 
+system.time({require(data.table);
+ d<-merge(data.table(data.frame(key=one)),data.table(data.frame(key=two)),
+ by='key',all=TRUE,allow.cartesian=TRUE)})
 }
 }
 

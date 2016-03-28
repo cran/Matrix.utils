@@ -2,7 +2,7 @@
 % Please edit documentation in R/Matrix.utils.R
 \name{dMcast}
 \alias{dMcast}
-\title{Casts or pivots a long \code{data frame} into a wide sparse matrix.}
+\title{Casts or pivots a long \code{data frame} into a wide sparse matrix}
 \usage{
 dMcast(data, formula, fun.aggregate = "sum", value.var = NULL,
   as.factors = FALSE)
@@ -17,6 +17,9 @@ dMcast(data, formula, fun.aggregate = "sum", value.var = NULL,
 \item{value.var}{name of column that stores values to be aggregated numerics}
 
 \item{as.factors}{if TRUE, treat all columns as factors, including}
+}
+\value{
+a sparse \code{Matrix}
 }
 \description{
 Similar in function to \code{\link[reshape2]{dcast}}, but produces a sparse 
