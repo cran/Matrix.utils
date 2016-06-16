@@ -18,6 +18,15 @@
 
 \item{...}{arguments to be passed to or from methods.  Currently ignored}
 }
+\value{
+A sparse \code{Matrix}.  The rownames correspond to the values of the
+groupings or the interactions of groupings joined by a \code{_}.
+ 
+There is an attribute \code{crosswalk} that includes the groupings as a data
+frame.  This is necessary because it is not possible to include character or 
+data frame groupings in a sparse Matrix.  If needed, one can 
+\code{cbind(attr(x,"crosswalk"),x)} to combine the groupings and the aggregates.
+}
 \description{
 Similar to \code{\link[stats]{aggregate}}.  Splits the matrix into groups as
 specified by groupings, which can be one or more variables. Aggregation
@@ -41,6 +50,7 @@ orders<-data.frame(orderNum=as.factor(sample(1e6, 1e7, TRUE)),
    customer=as.factor(sample(1e4,1e7,TRUE)),
    state = sample(letters, 1e7, TRUE), amount=runif(1e7))
 system.time(d<-aggregate.Matrix(orders[,'amount',drop=FALSE],orders$orderNum))
+system.time(e<-aggregate.Matrix(orders[,'amount',drop=FALSE],orders[,c('customer','state')]))
 }
 }
 \seealso{
