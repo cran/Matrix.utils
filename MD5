@@ -1,6 +1,6 @@
-f34759eaa8775a9ebae5bf8f0acb5b7d *DESCRIPTION
+071da8eabc64be6aa1fa2da60250c845 *DESCRIPTION
 81c352db61a8f2041cd3d07b37bba0af *NAMESPACE
-5f32e7cbc5f7c21829f7a09e3e6e47c0 *R/Matrix.utils.R
+22ef8d618fb93dd33dd4db6ce11466ad *R/Matrix.utils.R
 2aea5f8fa31c4e78a0f804177ca10310 *man/Matrix.utils.Rd
 1af1ef6a1f58e61649b23b16724bd9cf *man/aggregate.Matrix.Rd
 3513173b59cc501919ed53d0e68b47e1 *man/dMcast.Rd

@@ -95,7 +95,6 @@ NULL
 #' }
 dMcast<-function(data,formula,fun.aggregate='sum',value.var=NULL,as.factors=FALSE)
 {
-  browser()
   alltms<-terms(formula,data=data)
   response<-rownames(attr(alltms,'factors'))[attr(alltms,'response')]
   tm<-attr(alltms,"term.labels")
