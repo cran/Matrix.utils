@@ -87,7 +87,8 @@ system.time({require(data.table);
  by='orderNum',all=TRUE,allow.cartesian=TRUE)})
 
 #In certain cases, merge.Matrix can be much faster than alternatives. 
-one<-as.character(1:1000000) two<-as.character(sample(1:1000000,1e5,TRUE)) 
+one<-as.character(1:1000000) 
+two<-as.character(sample(1:1000000,1e5,TRUE)) 
 system.time(b<-merge.Matrix(one,two,one,two)) 
 system.time(c<-dplyr::full_join(data.frame(key=one),data.frame(key=two))) 
 system.time({require(data.table);

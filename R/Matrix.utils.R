@@ -7,9 +7,8 @@
 #' @docType package
 #' @import Matrix
 #' @import grr
-#' @importFrom stats aggregate
+#' @importFrom stats aggregate as.formula terms contrasts na.omit na.pass
 #' @importFrom methods is as
-#' @importFrom stats as.formula terms
 NULL
 
 #' Casts or pivots a long \code{data frame} into a wide sparse matrix
@@ -34,6 +33,10 @@ NULL
 #' @param fun.aggregate name of aggregation function.  Defaults to 'sum'
 #' @param value.var name of column that stores values to be aggregated numerics
 #' @param as.factors if TRUE, treat all columns as factors, including
+#' @param factor.nas if TRUE, treat factors with NAs as new levels.  Otherwise, 
+#'  rows with NAs will receive zeroes in all columns for that factor
+#' @param drop.unused.levels should factors have unused levels dropped? Defaults to TRUE, 
+#'  in contrast to \code{\link{model.matrix}}
 #' @return a sparse \code{Matrix}
 #' @seealso \code{\link[reshape]{cast}}
 #' @seealso \code{\link[reshape2]{dcast}}
@@ -70,7 +73,7 @@ NULL
 #' system.time(b<-reshape2::dcast(orders,sku~state,sum,
 #'    value.var = 'amount')) # 2.61 seconds 
 #' system.time(c<-dMcast(orders,sku~state,
-#'    value.var = 'amount')) # 28 seconds 
+#'    value.var = 'amount')) # 8.66 seconds 
 #'    
 #' # However, this situation changes as the result set becomes larger 
 #' system.time(a<-dcast.data.table(as.data.table(orders),customer~sku,sum,
@@ -78,23 +81,30 @@ NULL
 #' system.time(b<-reshape2::dcast(orders,customer~sku,sum,
 #'    value.var = 'amount')) # 34.7 seconds 
 #'  system.time(c<-dMcast(orders,customer~sku,
-#'    value.var = 'amount')) # 27 seconds 
+#'    value.var = 'amount')) # 14.55 seconds 
 #'    
 #' # More complicated: 
 #' system.time(a<-dcast.data.table(as.data.table(orders),customer~sku+state,sum,
-#'    value.var = 'amount')) # 18.1 seconds, object size = 2084 Mb 
+#'    value.var = 'amount')) # 16.96 seconds, object size = 2084 Mb 
 #' system.time(b<-reshape2::dcast(orders,customer~sku+state,sum,
 #'    value.var = 'amount')) # Does not return 
 #' system.time(c<-dMcast(orders,customer~sku:state,
-#'    value.var = 'amount')) # 30.69 seconds, object size = 115.4 Mb
+#'    value.var = 'amount')) # 21.53 seconds, object size = 116.1 Mb
 #' 
 #' system.time(a<-dcast.data.table(as.data.table(orders),orderNum~sku,sum,
 #'    value.var = 'amount')) # Does not return 
 #' system.time(c<-dMcast(orders,orderNum~sku,
-#'    value.var = 'amount')) # 36.33 seconds, object size = 175Mb
+#'    value.var = 'amount')) # 24.83 seconds, object size = 175Mb
+#' 
+#' system.time(c<-dMcast(orders,sku:state~customer,
+#'    value.var = 'amount')) # 17.97 seconds, object size = 175Mb
+#'        
 #' }
-dMcast<-function(data,formula,fun.aggregate='sum',value.var=NULL,as.factors=FALSE)
+dMcast<-function(data,formula,fun.aggregate='sum',value.var=NULL,as.factors=FALSE,factor.nas=TRUE,drop.unused.levels=TRUE)
 {
+  values<-1
+  if(!is.null(value.var))
+    values<-data[,value.var]
   alltms<-terms(formula,data=data)
   response<-rownames(attr(alltms,'factors'))[attr(alltms,'response')]
   tm<-attr(alltms,"term.labels")
@@ -105,12 +115,32 @@ dMcast<-function(data,formula,fun.aggregate='sum',value.var=NULL,as.factors=FALS
   newterms<-unlist(lapply(i2,function (x) paste("paste(",paste(x,collapse=','),",","sep='_'",")")))
   newterms<-c(simple,newterms)
   newformula<-as.formula(paste('~0+',paste(newterms,collapse='+')))
+  allvars<-all.vars(alltms)
+  data<-data[,c(allvars),drop=FALSE]
   if(as.factors)
+    data<-data.frame(lapply(data,as.factor))
+  characters<-unlist(lapply(data,is.character))
+  data[,characters]<-lapply(data[,characters,drop=FALSE],as.factor)
+  factors<-unlist(lapply(data,is.factor))
+  #Prevents errors with 1 or fewer distinct levels
+  data[,factors]<-lapply(data[,factors,drop=FALSE],function (x) 
   {
-    allvars<-all.vars(alltms)
-    data[,allvars]<-lapply(data[,allvars],as.factor)
-  }
-  result<-sparse.model.matrix(newformula,data,drop.unused.levels = TRUE)
+    if(factor.nas)
+      if(any(is.na(x)))
+      {
+        levels(x)<-c(levels(x),'NA')
+        x[is.na(x)]<-'NA'
+      }
+    if(drop.unused.levels)
+        if(nlevels(x)!=length(na.omit(unique(x))))
+          x<-factor(as.character(x))
+    y<-contrasts(x,contrasts=FALSE,sparse=TRUE)
+    attr(x,'contrasts')<-y
+    return(x)
+  })
+  #Allows NAs to pass
+  attr(data,'na.action')<-na.pass
+  result<-sparse.model.matrix(newformula,data,drop.unused.levels = FALSE,row.names=FALSE)
   brokenNames<-grep('paste(',colnames(result),fixed = TRUE)
   colnames(result)[brokenNames]<-lapply(colnames(result)[brokenNames],function (x) {
     x<-gsub('paste(',replacement='',x=x,fixed = TRUE) 
@@ -118,9 +148,7 @@ dMcast<-function(data,formula,fun.aggregate='sum',value.var=NULL,as.factors=FALS
     x<-gsub(pattern='_sep = \"_\")',replacement='',x=x,fixed=TRUE)
     return(x)
   })
-  values<-1
-  if(!is.null(value.var))
-    values<-data[,value.var]
+
   result<-result*values
   if(isTRUE(response>0))
   {
@@ -181,9 +209,8 @@ aggregate.Matrix<-function(x,groupings=NULL,form=NULL,fun='sum',...)
   if(fun=='count')
     x<-x!=0
   groupings2<-groupings
-  if(is(groupings2,'Matrix'))
-    groupings2<-as.matrix(groupings2)
-  groupings2<-data.frame(groupings2)
+  if(!is(groupings2,'data.frame'))
+    groupings2<-as(groupings2,'data.frame')
   groupings2<-data.frame(lapply(groupings2,as.factor))
   groupings2<-data.frame(interaction(groupings2,sep = '_'))
   colnames(groupings2)<-'A'
@@ -195,7 +222,7 @@ aggregate.Matrix<-function(x,groupings=NULL,form=NULL,fun='sum',...)
   result<-t(mapping) %*% x
   if(fun=='mean')
     result@x<-result@x/(aggregate.Matrix(x,groupings2,fun='count'))@x
-  attr(result,'crosswalk')<-extract(groupings,match(rownames(result),groupings2$A))
+  attr(result,'crosswalk')<-grr::extract(groupings,match(rownames(result),groupings2$A))
   return(result)
 }
 
@@ -272,7 +299,8 @@ aggregate.Matrix<-function(x,groupings=NULL,form=NULL,fun='sum',...)
 #'  by='orderNum',all=TRUE,allow.cartesian=TRUE)})
 #'
 #'#In certain cases, merge.Matrix can be much faster than alternatives. 
-#'one<-as.character(1:1000000) two<-as.character(sample(1:1000000,1e5,TRUE)) 
+#'one<-as.character(1:1000000) 
+#'two<-as.character(sample(1:1000000,1e5,TRUE)) 
 #'system.time(b<-merge.Matrix(one,two,one,two)) 
 #'system.time(c<-dplyr::full_join(data.frame(key=one),data.frame(key=two))) 
 #'system.time({require(data.table);
@@ -398,3 +426,6 @@ len<-function (data)
 
 setAs('Matrix','data.frame',function (from) as.data.frame(as.matrix(from)))
 
+setAs('matrix','data.frame',function (from) as.data.frame(from))
+
+setAs('vector','data.frame',function (from) data.frame(from))

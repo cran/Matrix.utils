@@ -5,7 +5,7 @@
 \title{Casts or pivots a long \code{data frame} into a wide sparse matrix}
 \usage{
 dMcast(data, formula, fun.aggregate = "sum", value.var = NULL,
-  as.factors = FALSE)
+  as.factors = FALSE, factor.nas = TRUE, drop.unused.levels = TRUE)
 }
 \arguments{
 \item{data}{a data frame}
@@ -17,6 +17,12 @@ dMcast(data, formula, fun.aggregate = "sum", value.var = NULL,
 \item{value.var}{name of column that stores values to be aggregated numerics}
 
 \item{as.factors}{if TRUE, treat all columns as factors, including}
+
+\item{factor.nas}{if TRUE, treat factors with NAs as new levels.  Otherwise, 
+rows with NAs will receive zeroes in all columns for that factor}
+
+\item{drop.unused.levels}{should factors have unused levels dropped? Defaults to TRUE, 
+in contrast to \code{\link{model.matrix}}}
 }
 \value{
 a sparse \code{Matrix}
@@ -70,7 +76,7 @@ system.time(a<-dcast.data.table(as.data.table(orders),sku~state,sum,
 system.time(b<-reshape2::dcast(orders,sku~state,sum,
    value.var = 'amount')) # 2.61 seconds 
 system.time(c<-dMcast(orders,sku~state,
-   value.var = 'amount')) # 28 seconds 
+   value.var = 'amount')) # 8.66 seconds 
    
 # However, this situation changes as the result set becomes larger 
 system.time(a<-dcast.data.table(as.data.table(orders),customer~sku,sum,
@@ -78,20 +84,24 @@ system.time(a<-dcast.data.table(as.data.table(orders),customer~sku,sum,
 system.time(b<-reshape2::dcast(orders,customer~sku,sum,
    value.var = 'amount')) # 34.7 seconds 
  system.time(c<-dMcast(orders,customer~sku,
-   value.var = 'amount')) # 27 seconds 
+   value.var = 'amount')) # 14.55 seconds 
    
 # More complicated: 
 system.time(a<-dcast.data.table(as.data.table(orders),customer~sku+state,sum,
-   value.var = 'amount')) # 18.1 seconds, object size = 2084 Mb 
+   value.var = 'amount')) # 16.96 seconds, object size = 2084 Mb 
 system.time(b<-reshape2::dcast(orders,customer~sku+state,sum,
    value.var = 'amount')) # Does not return 
 system.time(c<-dMcast(orders,customer~sku:state,
-   value.var = 'amount')) # 30.69 seconds, object size = 115.4 Mb
+   value.var = 'amount')) # 21.53 seconds, object size = 116.1 Mb
 
 system.time(a<-dcast.data.table(as.data.table(orders),orderNum~sku,sum,
    value.var = 'amount')) # Does not return 
 system.time(c<-dMcast(orders,orderNum~sku,
-   value.var = 'amount')) # 36.33 seconds, object size = 175Mb
+   value.var = 'amount')) # 24.83 seconds, object size = 175Mb
+
+system.time(c<-dMcast(orders,sku:state~customer,
+   value.var = 'amount')) # 17.97 seconds, object size = 175Mb
+       
 }
 }
 \seealso{
