@@ -160,24 +160,31 @@ dMcast<-function(data,formula,fun.aggregate='sum',value.var=NULL,as.factors=FALS
 
 #' Compute summary statistics of a Matrix
 #' 
-#' Similar to \code{\link[stats]{aggregate}}.  Splits the matrix into groups as
-#' specified by groupings, which can be one or more variables. Aggregation
+#' Similar to \code{\link[stats]{aggregate}}.  Splits the matrix into groups as 
+#' specified by groupings, which can be one or more variables. Aggregation 
 #' function will be applied to all columns in data, or as specified in formula. 
 #' Warning: groupings will be made dense if it is sparse, though data will not.
 #' 
+#' \code{aggregate.Matrix} uses its own implementations of functions and should
+#' be passed a string in the \code{fun} argument.
+#' 
 #' @param x a \code{\link{Matrix}} or matrix-like object
-#' @param groupings an object coercible to a group of factors defining the groups
+#' @param groupings an object coercible to a group of factors defining the
+#'   groups
 #' @param form \code{\link[stats]{formula}}
-#' @param fun name of aggregation function to be applied to all columns in data
+#' @param fun character string specifying the name of aggregation function to be
+#'   applied to all columns in data.  Currently "sum", "count", and "mean"
+#'   are supported.
 #' @param ... arguments to be passed to or from methods.  Currently ignored
 #' @return A sparse \code{Matrix}.  The rownames correspond to the values of the
-#' groupings or the interactions of groupings joined by a \code{_}.
-#'  
-#' There is an attribute \code{crosswalk} that includes the groupings as a data
-#' frame.  This is necessary because it is not possible to include character or 
-#' data frame groupings in a sparse Matrix.  If needed, one can 
-#' \code{cbind(attr(x,"crosswalk"),x)} to combine the groupings and the aggregates.
-#'  
+#'   groupings or the interactions of groupings joined by a \code{_}.
+#'   
+#'   There is an attribute \code{crosswalk} that includes the groupings as a
+#'   data frame.  This is necessary because it is not possible to include
+#'   character or data frame groupings in a sparse Matrix.  If needed, one can 
+#'   \code{cbind(attr(x,"crosswalk"),x)} to combine the groupings and the
+#'   aggregates.
+#'   
 #' @seealso \code{\link[dplyr]{summarise}}
 #' @seealso \code{\link[plyr]{summarise}}
 #' @seealso \code{\link[stats]{aggregate}}
@@ -188,7 +195,12 @@ dMcast<-function(data,formula,fun.aggregate='sum',value.var=NULL,as.factors=FALS
 #'    orderNum=sample(1000,10000,TRUE),
 #'    sku=sample(1000,10000,TRUE),
 #'    amount=runif(10000))),sparse=TRUE)
-#' a<-aggregate.Matrix(skus[,'amount'],skus[,'sku',drop=FALSE])
+#'#Calculate sums for each sku
+#' a<-aggregate.Matrix(skus[,'amount'],skus[,'sku',drop=FALSE],fun='sum')
+#'#Calculate counts for each sku
+#' b<-aggregate.Matrix(skus[,'amount'],skus[,'sku',drop=FALSE],fun='count')
+#'#Calculate mean for each sku
+#' c<-aggregate.Matrix(skus[,'amount'],skus[,'sku',drop=FALSE],fun='mean')
 #' 
 #' m<-rsparsematrix(1000000,100,.001)
 #' labels<-as.factor(sample(1e4,1e6,TRUE))

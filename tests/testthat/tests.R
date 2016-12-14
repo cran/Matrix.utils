@@ -9,7 +9,7 @@ test_that("dMcast dimensions are correct", {
   a<-dMcast(warpbreaks,~.)
   expect_equal(nrow(a),nrow(warpbreaks))
   b<-dMcast(warpbreaks,~.,as.factors=TRUE)
-  expect_less_than(ncol(a),ncol(b))
+  expect_lt(ncol(a),ncol(b))
 })
 
 test_that("dMcast air quality tests", {
