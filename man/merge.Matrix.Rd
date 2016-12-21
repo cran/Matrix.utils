@@ -5,9 +5,11 @@
 \alias{merge.Matrix}
 \title{Merges two Matrices or matrix-like objects}
 \usage{
-\method{merge}{Matrix}(x, y, by.x, by.y, all.x = TRUE, all.y = TRUE, ...)
+\method{merge}{Matrix}(x, y, by.x, by.y, all.x = TRUE, all.y = TRUE,
+  out.class = class(x), ...)
 
-join.Matrix(x, y, by.x, by.y, all.x = TRUE, all.y = TRUE, ...)
+join.Matrix(x, y, by.x, by.y, all.x = TRUE, all.y = TRUE,
+  out.class = class(x), ...)
 }
 \arguments{
 \item{x}{\code{Matrix} or matrix-like object}
@@ -23,6 +25,10 @@ included even if it has no matching values in \code{y}}
 
 \item{all.y}{logical; if \code{TRUE}, then each value in \code{y} will be 
 included even if it has no matching values in \code{x}}
+
+\item{out.class}{the class of the output object.  Defaults to the class of x. 
+Note that some output classes are not possible due to R coercion
+capabilities, such as converting a character matrix to a Matrix.}
 
 \item{...}{arguments to be passed to or from methods.  Currently ignored}
 }
@@ -46,9 +52,9 @@ Note that \code{NA} values will match other \code{NA} values.
 \examples{
 
 orders<-Matrix(as.matrix(data.frame(orderNum=1:1000, 
-customer=sample(100,1000,TRUE)))) 
-cancelledOrders<-Matrix(as.matrix(data.frame(orderNum=sample(1000,100), 
-cancelled=1))) 
+ customer=sample(100,1000,TRUE)))) 
+ cancelledOrders<-Matrix(as.matrix(data.frame(orderNum=sample(1000,100), 
+ cancelled=1))) 
 skus<-Matrix(as.matrix(data.frame(orderNum=sample(1000,10000,TRUE), 
 sku=sample(1000,10000,TRUE), amount=runif(10000)))) 
 a<-merge(orders,cancelledOrders,orders[,'orderNum'],cancelledOrders[,'orderNum'])
@@ -95,5 +101,6 @@ system.time({require(data.table);
  d<-merge(data.table(data.frame(key=one)),data.table(data.frame(key=two)),
  by='key',all=TRUE,allow.cartesian=TRUE)})
 }
+
 }
 

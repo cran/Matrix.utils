@@ -238,6 +238,26 @@ aggregate.Matrix<-function(x,groupings=NULL,form=NULL,fun='sum',...)
   return(result)
 }
 
+aggregate2.Matrix<-function(x,groupings=NULL,form=NULL,fun=sum,...)
+{
+  #if(!is(x,'Matrix'))
+    x<-as.matrix(x)
+  groupings2<-groupings
+  if(!is(groupings2,'data.frame'))
+    groupings2<-as(groupings2,'data.frame')
+  groupings2<-data.frame(lapply(groupings2,as.factor))
+  groupings2<-interaction(groupings2,sep = '_')
+  index<-grr::order2(groupings2)
+  breaks<-which(!duplicated(groupings2[index]))
+  results1<-fun(x[1:breaks[1],])
+  results<-matrix(results1,ncol=length(results1),nrow=length(breaks))
+  for (i in seq_len(length(breaks)-1)) 
+  {
+    results[i+1]<-fun(x[(breaks[i]+1):breaks[i+1],])
+  }
+  return(results)
+}
+  
 
 #'Merges two Matrices or matrix-like objects
 #'
@@ -264,15 +284,18 @@ aggregate.Matrix<-function(x,groupings=NULL,form=NULL,fun='sum',...)
 #'  included even if it has no matching values in \code{y}
 #'@param all.y logical; if \code{TRUE}, then each value in \code{y} will be 
 #'  included even if it has no matching values in \code{x}
+#'@param out.class the class of the output object.  Defaults to the class of x. 
+#'  Note that some output classes are not possible due to R coercion
+#'  capabilities, such as converting a character matrix to a Matrix.
 #'@param ... arguments to be passed to or from methods.  Currently ignored
 #'@export
 #'@export merge.Matrix
 #'@examples
 #' 
 #' orders<-Matrix(as.matrix(data.frame(orderNum=1:1000, 
-#' customer=sample(100,1000,TRUE)))) 
-#' cancelledOrders<-Matrix(as.matrix(data.frame(orderNum=sample(1000,100), 
-#' cancelled=1))) 
+#'  customer=sample(100,1000,TRUE)))) 
+#'  cancelledOrders<-Matrix(as.matrix(data.frame(orderNum=sample(1000,100), 
+#'  cancelled=1))) 
 #' skus<-Matrix(as.matrix(data.frame(orderNum=sample(1000,10000,TRUE), 
 #' sku=sample(1000,10000,TRUE), amount=runif(10000)))) 
 #' a<-merge(orders,cancelledOrders,orders[,'orderNum'],cancelledOrders[,'orderNum'])
@@ -319,7 +342,8 @@ aggregate.Matrix<-function(x,groupings=NULL,form=NULL,fun='sum',...)
 #'  d<-merge(data.table(data.frame(key=one)),data.table(data.frame(key=two)),
 #'  by='key',all=TRUE,allow.cartesian=TRUE)})
 #'}
-merge.Matrix<-function(x,y,by.x,by.y,all.x=TRUE,all.y=TRUE,...)
+#'
+merge.Matrix<-function(x,y,by.x,by.y,all.x=TRUE,all.y=TRUE,out.class=class(x),...)
 {
   requireNamespace('grr')
   if(is.null(dim(x)))
@@ -329,7 +353,9 @@ merge.Matrix<-function(x,y,by.x,by.y,all.x=TRUE,all.y=TRUE,...)
   y<-rBind(y,NA)
   if(!is.null(colnames(x)) & !is.null(colnames(y)))
     colnames(y)[colnames(y) %in% colnames(x)]<-paste('y',colnames(y)[colnames(y) %in% colnames(x)],sep='.')
-  result<-cbind2(grr::extract(x,indices$x),grr::extract(y,indices$y))
+  x<-as(grr::extract(x,indices$x),out.class)
+  y<-as(grr::extract(y,indices$y),out.class)
+  result<-cbind2(x,y)
   return(result)
 }
 
@@ -438,6 +464,11 @@ len<-function (data)
 
 setAs('Matrix','data.frame',function (from) as.data.frame(as.matrix(from)))
 
+setAs('data.frame','dgeMatrix', function (from) as(as.matrix(from),'dgeMatrix'))
+
+setAs('data.frame','dgCMatrix', function (from) as(as.matrix(from),'dgCMatrix'))
+
 setAs('matrix','data.frame',function (from) as.data.frame(from))
 
 setAs('vector','data.frame',function (from) data.frame(from))
+

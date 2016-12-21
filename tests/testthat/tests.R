@@ -33,3 +33,19 @@ test_that("dMcast air quality tests", {
   d<-dMcast(aqm, month:day ~variable,fun.aggregate = 'mean',value.var='value',factor.nas = FALSE)
   expect_equal(ncol(d),3)
 })
+
+test_that("merge.Matrix can handle mixed types", {
+  cancelledOrders<-data.frame(orderNum=as.character(sample(1e3,1e2)),
+                              cancelled=1,stringsAsFactors=FALSE)
+  orders<-Matrix(as.matrix(data.frame(orderNum=1:1000, 
+                                      customer=sample(100,1000,TRUE)))) 
+  expect_s3_class(merge.Matrix(cancelledOrders,orders,by.y=orders[,'orderNum'],by.x=as.numeric(cancelledOrders$orderNum)),'data.frame')
+  expect_error(merge.Matrix(orders,cancelledOrders,by.x=orders[,'orderNum'],by.y=as.numeric(cancelledOrders$orderNum)))
+  expect_s3_class(merge.Matrix(orders,cancelledOrders,by.x=orders[,'orderNum'],by.y=as.numeric(cancelledOrders$orderNum),out.class='data.frame'),'data.frame')
+  cancelledOrders$orderNum<-as.numeric(cancelledOrders$orderNum)
+  expect_s4_class(merge.Matrix(orders,cancelledOrders,by.x=orders[,'orderNum'],by.y=as.numeric(cancelledOrders$orderNum)),'Matrix')
+  cancelledOrders<-as.matrix(cancelledOrders)
+  expect_s4_class(merge.Matrix(orders,cancelledOrders,by.x=orders[,'orderNum'],by.y=as.numeric(cancelledOrders[,'orderNum'])),'Matrix')
+  expect_is(merge.Matrix(cancelledOrders,orders,by.y=orders[,'orderNum'],by.x=as.numeric(cancelledOrders[,'orderNum'])),'matrix')
+  
+})
