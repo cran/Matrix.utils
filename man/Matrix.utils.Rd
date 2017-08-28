@@ -9,4 +9,3 @@
 Implements data manipulation methods such as cast, aggregate, and merge/join
 for \code{\link{Matrix}} and matrix-like objects.
 }
-

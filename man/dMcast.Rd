@@ -109,4 +109,3 @@ system.time(c<-dMcast(orders,sku:state~customer,
 
 \code{\link[reshape2]{dcast}}
 }
-

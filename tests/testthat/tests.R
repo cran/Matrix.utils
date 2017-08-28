@@ -49,3 +49,15 @@ test_that("merge.Matrix can handle mixed types", {
   expect_is(merge.Matrix(cancelledOrders,orders,by.y=orders[,'orderNum'],by.x=as.numeric(cancelledOrders[,'orderNum'])),'matrix')
   
 })
+
+test_that("rBind.fill can handle mixed types", {
+  df1 = data.frame(a = c(1,2,3), d = c(4,5,6))
+  df2 = data.frame(d = c(7,8), b = c(9,10))
+  df3 = data.frame(e = 'a')
+  expect_s3_class(rBind.fill(df1,df2,fill=NA),'data.frame')
+  expect_s4_class(rBind.fill(as(df1,'Matrix'),df2,fill=0),'Matrix')
+  expect_is(rBind.fill(as.matrix(df1),as(df2,'Matrix'),c(1,2),fill=0),'matrix')
+  expect_s3_class(rBind.fill(as(as.matrix(df1),'Matrix'),df2,df3,out.class='data.frame'),'data.frame')
+  # rBind.fill(c(1,2,3),list(4,5,6,7))
+  # rBind.fill(df1,c(1,2,3,4))
+})

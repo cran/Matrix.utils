@@ -73,4 +73,3 @@ system.time(e<-aggregate.Matrix(orders[,'amount',drop=FALSE],orders[,c('customer
 
 \code{\link[stats]{aggregate}}
 }
-

@@ -4,13 +4,17 @@
 \alias{rBind.fill}
 \title{Combine matrixes by row, fill in missing columns}
 \usage{
-rBind.fill(x, ..., fill = NA)
+rBind.fill(x, ..., fill = NULL, out.class = class(rbind(x, x)))
 }
 \arguments{
 \item{x, ...}{Objects to combine.  If the first argument is a list and 
 \code{..} is unpopulated, the objects in that list will be combined.}
 
 \item{fill}{value with which to fill unmatched columns}
+
+\item{out.class}{the class of the output object.  Defaults to the class of x. 
+Note that some output classes are not possible due to R coercion
+capabilities, such as converting a character matrix to a Matrix.}
 }
 \value{
 a single object of the same class as the first input, or of class
@@ -55,4 +59,3 @@ system.time(b<-rBind.fill(m,m2))
 
 \code{\link[plyr]{rbind.fill.matrix}}
 }
-
