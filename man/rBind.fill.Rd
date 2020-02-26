@@ -4,7 +4,7 @@
 \alias{rBind.fill}
 \title{Combine matrixes by row, fill in missing columns}
 \usage{
-rBind.fill(x, ..., fill = NULL, out.class = class(rbind(x, x)))
+rBind.fill(x, ..., fill = NULL, out.class = class(rbind(x, x))[1])
 }
 \arguments{
 \item{x, ...}{Objects to combine.  If the first argument is a list and 

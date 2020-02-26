@@ -345,7 +345,7 @@ aggregate2.Matrix<-function(x,groupings=NULL,form=NULL,fun=sum,...)
 #'  by='key',all=TRUE,allow.cartesian=TRUE)})
 #'}
 #'
-merge.Matrix<-function(x,y,by.x,by.y,all.x=TRUE,all.y=TRUE,out.class=class(x),
+merge.Matrix<-function(x,y,by.x,by.y,all.x=TRUE,all.y=TRUE,out.class=class(x)[1],
                        fill.x=ifelse(is(x,'sparseMatrix'),FALSE,NA),fill.y=fill.x,...)
 {
   requireNamespace('grr')
@@ -412,7 +412,7 @@ join.Matrix<-merge.Matrix
 #' colnames(m2)<-3:102
 #' system.time(b<-rBind.fill(m,m2))
 #' 
-rBind.fill<-function(x,...,fill=NULL,out.class=class(rbind(x,x)))
+rBind.fill<-function(x,...,fill=NULL,out.class=class(rbind(x,x))[1])
 {
   if (is.list(x) && !is.data.frame(x) && missing(...)) {
     Reduce(function (x,y) rBind.fill.internal(x,y,fill,out.class),x)

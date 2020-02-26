@@ -3,7 +3,6 @@
 \docType{package}
 \name{Matrix.utils}
 \alias{Matrix.utils}
-\alias{Matrix.utils-package}
 \title{Data.frame-Like Operations on Sparse and Dense \code{Matrix} Objects}
 \description{
 Implements data manipulation methods such as cast, aggregate, and merge/join

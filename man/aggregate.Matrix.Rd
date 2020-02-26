@@ -4,8 +4,7 @@
 \alias{aggregate.Matrix}
 \title{Compute summary statistics of a Matrix}
 \usage{
-\method{aggregate}{Matrix}(x, groupings = NULL, form = NULL, fun = "sum",
-  ...)
+\method{aggregate}{Matrix}(x, groupings = NULL, form = NULL, fun = "sum", ...)
 }
 \arguments{
 \item{x}{a \code{\link{Matrix}} or matrix-like object}

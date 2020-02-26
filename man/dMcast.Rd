@@ -4,8 +4,15 @@
 \alias{dMcast}
 \title{Casts or pivots a long \code{data frame} into a wide sparse matrix}
 \usage{
-dMcast(data, formula, fun.aggregate = "sum", value.var = NULL,
-  as.factors = FALSE, factor.nas = TRUE, drop.unused.levels = TRUE)
+dMcast(
+  data,
+  formula,
+  fun.aggregate = "sum",
+  value.var = NULL,
+  as.factors = FALSE,
+  factor.nas = TRUE,
+  drop.unused.levels = TRUE
+)
 }
 \arguments{
 \item{data}{a data frame}
